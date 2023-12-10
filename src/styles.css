@@ -80,6 +80,12 @@ https://micku7zu.github.io/vanilla-tilt.js/index.html
   flex-direction: row;
 }
 
+.game-histo {
+  display: flex;
+  flex-direction: row;
+}
+
+
 .game-info {
   margin-left: 20px;
   min-width: 190px;
