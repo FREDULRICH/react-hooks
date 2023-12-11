@@ -93,7 +93,7 @@ function Game() {
       </div>
     </div>
   )
-}
+};
 
 function calculateStatus(winner, squares, nextValue) {
   return winner

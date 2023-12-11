@@ -1,46 +1,36 @@
+/* eslint-disable no-undef */
 // useState: tic tac toe
 // http://localhost:3000/isolated/exercise/04.js
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState , useEffect} from 'react';
 import '../styles.css';
+
+import { useLocalStorageState } from '../utils';
+
+
 
 
 function Board() {
   // 🐨 squares is the state for this component. Add useState for squares 
-  const [squares, setSquares]= React.useState(Array(9).fill(null));
   
-
-  //tabHisto
-  const [tabHisto, setTabHisto] = useState ([]);
-
-  // 🐨 We'll need the following bits of derived state:
-  // - nextValue ('X' or 'O')
-  const [nextValue, setNextValue] = useState ('X');
-
+  // stockage dans le localstorage quand changement
+   const [squares, setSquares] = useLocalStorageState ('squares',Array(9).fill(null),);
+  
   // - winner ('X', 'O', or null)
-  const [winnerIs, setWinnerIs] = useState (null);
-
+  const winnerIs = CalculateWinner (squares);
+    
+  // - nextValue ('X' or 'O')
+  const nextValue = calculateNextValue (squares);
   
-
+   //tabHisto
+   const [tabHisto, setTabHisto] = useState ([]);
+  
 
   // This is the function your square click handler will call. `square` should
   // be an index. So if they click the center square, this will be `4`.
   function selectSquare(square) {
-
-
-    // 🐨 first, if there's already a winner or there's already a value at the
-    // given square index (like someone clicked a square that's already been
-    // clicked), then return early so we don't make any state changes
-    //
   
-
-    // 🦉 It's typically a bad idea to mutate or directly change state in React.
-    // Doing so can lead to subtle bugs that can easily slip into production.
-    //
-    // 🐨 make a copy of the squares array
-    // 💰 `[...squares]` will do it!)
-    
     let HistoTemp = [...tabHisto];
     let squareTemp = [...squares];
     
@@ -50,17 +40,9 @@ function Board() {
         // 💰 `squaresCopy[square] = nextValue`
         squareTemp[square]= nextValue;
 
-       let nextJoueur = nextValue==='X' ?'O':'X';
-
-       // sélection du prochain joueur
-       setNextValue(nextJoueur )
-
-       //Calculc du gagnant
-       let ww =CalculateWinner (squareTemp);
-       if (ww !==null) setWinnerIs (squareTemp[square]);
-
+       
       // Mise à jour de l'historique
-      HistoTemp.push ([ [...squareTemp], nextJoueur]);
+      HistoTemp.push ([ [...squareTemp], nextValue]);
       setTabHisto (HistoTemp );
     
       // 🐨 set the squares to your copy
@@ -69,13 +51,33 @@ function Board() {
       
     }  
     
-  }
+  };
 
-  function restart() {
+ 
+function affichejeu ()
+{
+  return (
+    <div> Les coups joués
+      <ul>
+        
+        {tabHisto.map ((item,index) => (
+          <li key = {index}> 
+         {index < tabHisto.length ? (
+          <button onClick={() => restartFrom(index)}> Reprendre </button>): null}
+           {`   ${item[0]} [ ${item[1]} ]` } 
+          </li> 
+        ))
+        }
+      </ul>
+    </div>
+  )
+}
+
+
+ function restart() {
     // 🐨 reset the squares
     // 💰 `Array(9).fill(null)` will do it!
     setSquares (Array(9).fill(null))
-    setWinnerIs(null);
     setTabHisto([]);
   }
 
@@ -88,8 +90,7 @@ function restartFrom (index)
   const [squaresReprend, nextValueReprend] = historySlice[historySlice.length - 1];
 
   setSquares (squaresReprend);
-  setNextValue(nextValueReprend)
-  setWinnerIs (CalculateWinner(squaresReprend));
+
 
   // Mettez à jour l'historique pour correspondre à l'historique jusqu'à l'index spécifié
   setTabHisto(historySlice);
@@ -98,42 +99,32 @@ function restartFrom (index)
 
   function renderSquare(i) {
     return (
-      <button className="square" onClick={() => selectSquare(i)} disabled={winnerIs!==null}  >
-        {squares[i]}
+      <button style={{ backgroundColor: (winnerIs!==null?
+                                           (winnerIs[1].includes(i)?'green':'white')
+                                           :'white')}} 
+      
+      
+        className="square" onClick={() => selectSquare(i)} disabled={winnerIs!==null}  >
+        {squares[i]}  
       </button>
+       
     )
-  }
+  };
 
-
-  function afficheJeu ()
-  {
-    return (
-      <div>
-        <ul>
-          
-          {tabHisto.map ((item,index) => (
-            <li key = {index}> 
-           {index < tabHisto.length ? (
-            <button onClick={() => restartFrom(index)}> Reprendre </button>): null}
-             {`   ${item[0]} [ ${item[1]} ]` } 
-            </li> 
-          ))
-          }
-        </ul>
-      </div>
-    );
-  }
-
-
-
+ 
   return (
-    <div>
+
+   <div className="game1">
+
+    <div className='lagrille' >
+
       {/* 🐨 put the status in the div below */}
       <div className="status">Status :
         <div> 
          {CalculateStatus (winnerIs,squares, nextValue)}
         </div>
       </div>
+      
       <div className="board-row">
         {renderSquare(0)}
         {renderSquare(1)}
@@ -151,28 +142,26 @@ function restartFrom (index)
       </div>
       <button className="restart" onClick={restart}>
         restart
+        {/*(winnerIs!==null? `Gagne ${winnerIs[1].includes(0)}` : null)*/}
       </button>
-     
-      <div className='game-histo'>  {afficheJeu()}    </div>
+     </div> 
 
-    </div>
-  )
-}
-
-function Game() {
-  return (
-    <div className="game">
-      <div className="game-board">
-        <Board />
+     <div className='game-histo'> 
+        {affichejeu()}
       </div>
+
+
     </div>
+    
   )
-}
+};
+
+
 
 // eslint-disable-next-line no-unused-vars
 function CalculateStatus(winner, squares, nextValue) {
   return winner
-    ? `Winner: ${winner}`
+    ? `Winner: ${winner[0]}`
     : squares.every(Boolean)
     ? `Scratch: Cat's game`
     : `Next player: ${nextValue}`
@@ -183,6 +172,8 @@ function CalculateStatus(winner, squares, nextValue) {
 function calculateNextValue(squares) {
   return squares.filter(Boolean).length % 2 === 0 ? 'X' : 'O'
 }
+
+
 
 // eslint-disable-next-line no-unused-vars
 function CalculateWinner(squares) {
@@ -199,14 +190,14 @@ function CalculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i]
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a]
+      return ([squares[a],lines[i]])
     }
   }
   return null
 }
 
 function App() {
-  return <Game />
+  return <Board />
 }
 
 export default App
